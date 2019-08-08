@@ -1,0 +1,16 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">易诚通测试软件</string>
+    <string name="launcher_name">@string/app_name</string>
+    <string name="activity_name">@string/launcher_name</string>
+    <string name="setting_url_title">设置网址</string>
+    <string name="setting_url_ok">确认</string>
+    <string name="setting_url_cancel">取消</string>
+    <string name="setting_url_key">ECTONGS_URL</string>
+
+    <string name="alert_title">提示</string>
+    <string name="alert_confirm">确认</string>
+    <string name="alert_cancel">取消</string>
+
+
+</resources>
