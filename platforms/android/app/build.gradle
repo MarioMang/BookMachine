@@ -176,8 +176,8 @@ android {
         abortOnError false;
     }
 
-    compileSdkVersion 24
-    buildToolsVersion '29.0.1'
+    compileSdkVersion 22
+    buildToolsVersion '29.0.2'
 
     // This code exists for Crosswalk and other Native APIs.
     // By default, we multiply the existing version code in the
@@ -269,7 +269,7 @@ dependencies {
     implementation(project(path: ":CordovaLib"))
     implementation fileTree(dir: 'libs', include: ['*.aar', '*.jar'], exclude: [])
     // SUB-PROJECT DEPENDENCIES END
-    implementation 'com.android.support:appcompat-v7:24.2.1'
+    implementation 'com.android.support:appcompat-v7:22.2.1'
     implementation 'com.android.support.constraint:constraint-layout:1.1.3'
 }
 

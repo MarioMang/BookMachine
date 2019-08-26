@@ -37,11 +37,11 @@ import com.ectongs.app.EctongsApplication;
 import com.ectongs.device.printer.Printer;
 import com.ectongs.device.printer.common.Constant;
 import com.ectongs.device.printer.receiver.UsbBroadCastReceiver;
+import com.ftdi.j2xx.D2xxManager;
+import com.ftdi.j2xx.FT_Device;
 import com.printsdk.usbsdk.UsbDriver;
 
 import org.apache.cordova.CordovaActivity;
-
-import cn.wch.ch34xuartdriver.CH34xUARTDriver;
 
 public class MainActivity extends CordovaActivity {
 
@@ -94,18 +94,22 @@ public class MainActivity extends CordovaActivity {
 
 
         //初始化USB转串口设备
-        if (!initUARTDriver(application)) {
-            Dialog dialog = new AlertDialog.Builder(MainActivity.this)
-                    .setTitle(this.getResources().getText(R.string.alert_title))
-                    .setIcon(android.R.drawable.ic_dialog_info)
-                    .setMessage("您的设备不支持USB HOST，是否停止程序？")
-                    .setPositiveButton(this.getResources().getText(R.string.alert_confirm), (dialog1, which) -> exitApp())
-                    .setNegativeButton(this.getResources().getText(R.string.alert_cancel), (dialog1, which) -> {
-                    })
-                    .create();
+        try {
+            if (!initUARTDriver(application)) {
+                Dialog dialog = new AlertDialog.Builder(MainActivity.this)
+                        .setTitle(this.getResources().getText(R.string.alert_title))
+                        .setIcon(android.R.drawable.ic_dialog_info)
+                        .setMessage("您的设备不支持USB HOST，是否停止程序？")
+                        .setPositiveButton(this.getResources().getText(R.string.alert_confirm), (dialog1, which) -> exitApp())
+                        .setNegativeButton(this.getResources().getText(R.string.alert_cancel), (dialog1, which) -> {
+                        })
+                        .create();
 
-            dialog.setCanceledOnTouchOutside(false);
-            dialog.show();
+                dialog.setCanceledOnTouchOutside(false);
+                dialog.show();
+            }
+        } catch (D2xxManager.D2xxException e) {
+            e.printStackTrace();
         }
 
 
@@ -145,7 +149,8 @@ public class MainActivity extends CordovaActivity {
     public void onDestroy() {
         super.onDestroy();
         EctongsApplication application = (EctongsApplication) this.getApplication();
-        application.getUart().CloseDevice();
+//        application.getUart().CloseDevice();
+        application.getSerialDevice().close();
     }
 
     private boolean openPrintDevice(UsbManager manager, UsbDriver driver) {
@@ -186,38 +191,57 @@ public class MainActivity extends CordovaActivity {
      * @param application
      * @return
      */
-    public boolean initUARTDriver(EctongsApplication application) {
-        CH34xUARTDriver uartDriver = new CH34xUARTDriver(
-                (UsbManager) getSystemService(Context.USB_SERVICE),
-                this,
-                com.ectongs.device.serial.common.Constant.ACTION_USB_PERMISSION);
+    public boolean initUARTDriver(EctongsApplication application) throws D2xxManager.D2xxException {
 
-        if (!uartDriver.UsbFeatureSupported()) {
-            return false;
+        D2xxManager manager = D2xxManager.getInstance(this);
+        int devCount = manager.createDeviceInfoList(this);
+        if (devCount > 0) {
+            FT_Device ft_device = manager.openByIndex(this, 0);
+            if (ft_device != null && ft_device.isOpen()) {
+
+                ft_device.setBaudRate(com.ectongs.device.serial.common.Constant.baudRate);
+                ft_device.setBitMode(com.ectongs.device.serial.common.Constant.dataBit, D2xxManager.FT_BITMODE_RESET);
+                ft_device.setFlowControl(D2xxManager.FT_FLOW_NONE, com.ectongs.device.serial.common.Constant.flowXon, com.ectongs.device.serial.common.Constant.flowXoff);
+                ft_device.setLatencyTimer(com.ectongs.device.serial.common.Constant.latencyTimer);
+                ft_device.purge((byte) (D2xxManager.FT_PURGE_TX | D2xxManager.FT_PURGE_RX));
+
+                application.setSerialDevice(ft_device);
+                return true;
+            }
+
         }
 
-        int reval = uartDriver.ResumeUsbPermission();
-        if (reval != 0) {
-            return false;
-        }
+//        CH34xUARTDriver uartDriver = new CH34xUARTDriver(
+//                (UsbManager) getSystemService(Context.USB_SERVICE),
+//                this,
+//                com.ectongs.device.serial.common.Constant.ACTION_USB_PERMISSION);
+//
+//        if (!uartDriver.UsbFeatureSupported()) {
+//            return false;
+//        }
+//
+//        int reval = uartDriver.ResumeUsbPermission();
+//        if (reval != 0) {
+//            return false;
+//        }
+//
+//        reval = uartDriver.ResumeUsbList();
+//        if (reval != 0) {
+//            uartDriver.CloseDevice();
+//            return false;
+//        }
+//
+//        if (uartDriver.mDeviceConnection == null || !uartDriver.UartInit()) {
+//            return false;
+//        }
+//
+//        uartDriver.SetConfig(com.ectongs.device.serial.common.Constant.baudRate,
+//                com.ectongs.device.serial.common.Constant.dataBit,
+//                com.ectongs.device.serial.common.Constant.stopBit,
+//                com.ectongs.device.serial.common.Constant.parity,
+//                com.ectongs.device.serial.common.Constant.flowControl);
 
-        reval = uartDriver.ResumeUsbList();
-        if (reval != 0) {
-            uartDriver.CloseDevice();
-            return false;
-        }
-
-        if (uartDriver.mDeviceConnection == null || !uartDriver.UartInit()) {
-            return false;
-        }
-
-        uartDriver.SetConfig(com.ectongs.device.serial.common.Constant.baudRate,
-                com.ectongs.device.serial.common.Constant.dataBit,
-                com.ectongs.device.serial.common.Constant.stopBit,
-                com.ectongs.device.serial.common.Constant.parity,
-                com.ectongs.device.serial.common.Constant.flowControl);
-
-        application.setUart(uartDriver);
-        return true;
+//        application.setUart(uartDriver);
+        return false;
     }
 }

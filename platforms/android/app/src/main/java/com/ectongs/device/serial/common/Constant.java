@@ -11,7 +11,7 @@ public class Constant {
     /**
      * 数据位
      */
-    public static final byte dataBit = 0x08;
+    public static final byte dataBit = 0x00;
     /**
      * 停止位
      */
@@ -24,4 +24,9 @@ public class Constant {
      * 流控制: 0 - none; 1 - cts/rts
      */
     public static final byte flowControl = 0x00;
+
+    public static final byte flowXon = 0x0b;
+    public static final byte flowXoff = 0x0c;
+
+    public static final byte latencyTimer = 0x10;
 }
